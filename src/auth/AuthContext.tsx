@@ -1,7 +1,9 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { authService } from '../services/authService';
 import type { User, Permiso, AuthContextType } from '../types/auth.types';
+import { ROLES } from '../constants/roles';
 
 // ==========================================
 // CONTEXTO
@@ -14,50 +16,77 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 // ==========================================
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const navigate = useNavigate();
+  
   // ==========================================
-  // ESTADO CON LOADING
+  // ESTADO
   // ==========================================
   
-  const [isLoading, setIsLoading] = useState(true); // 🔥 NUEVO
+  const [isLoading, setIsLoading] = useState(true); 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
   // ==========================================
-  // EFECTO DE INICIALIZACIÓN (solo una vez)
+  // EFECTO DE INICIALIZACIÓN 
   // ==========================================
 
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const token = Cookies.get('token');
-
-        if (token) {
-          const userData = await authService.getCurrentUser();
-          // Validar estructura
-          if (userData && userData.iduser && userData.permisos && userData.permisos.length > 0) {
-            setIsAuthenticated(true);
-            setUser(userData);
-          } else {
-            clearCookies();
+        const storedUser = localStorage.getItem('user');
+        
+        if (storedUser) {
+          try {
+            const userData: User = JSON.parse(storedUser);
+            
+            if (userData?.iduser && userData?.permisos?.length > 0) {
+              try {
+                const validatedUser = await authService.getCurrentUser();
+                localStorage.setItem('user', JSON.stringify(validatedUser));
+                
+                setIsAuthenticated(true);
+                setUser(validatedUser);
+                setIsLoading(false);
+                return;
+                
+              } catch (apiError: any) {
+                if (apiError?.response?.status === 401) {
+                  clearAuth();
+                  setIsLoading(false);
+                  return;
+                }
+                
+                setIsAuthenticated(true);
+                setUser(userData);
+                setIsLoading(false);
+                return;
+              }
+            }
+          } catch (parseError) {
+            // Error parseando, limpiar
           }
-        } 
+        }
+        
+        clearAuth();
+        
       } catch (error) {
-        clearCookies();
+        clearAuth();
       } finally {
         setIsLoading(false);
       }
     };
 
     initAuth();
-  }, []);
-
+  }, []); 
   // ==========================================
-  // HELPER: Limpiar cookies
+  // HELPER: Limpiar autenticación
   // ==========================================
 
-  const clearCookies = () => {
-    Cookies.remove('token', { path: '/' });
+  const clearAuth = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token_expires_at');
     Cookies.remove('force_password_change', { path: '/' });
+    
     setIsAuthenticated(false);
     setUser(null);
   };
@@ -72,29 +101,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     expiresIn?: number,
     forcePasswordChange?: boolean
   ) => {
-    const expiresInDays = expiresIn ? expiresIn / (60 * 60 * 24) : 7;
-
-    // guardar el token 
-    Cookies.set('token', token, {
-      expires: expiresInDays,
-      sameSite: 'lax',
-      path: '/',
-    });
-
-    if (forcePasswordChange) {
-      Cookies.set('force_password_change', 'true', {
-        expires: expiresInDays,
-        sameSite: 'lax',
-        path: '/',
-      });
+    localStorage.setItem('user', JSON.stringify(userData));
+    
+    if (expiresIn) {
+      const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
+      localStorage.setItem('token_expires_at', expiresAt);
     }
-
+    
     setIsAuthenticated(true);
     setUser(userData);
   };
 
-  const logout = () => {
-    clearCookies();
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Error en logout:', error);
+    } finally {
+      
+      clearAuth();
+      
+      navigate('/login', { replace: true });
+    }
   };
 
   const requiresPasswordChange = (): boolean => {
@@ -119,9 +147,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return user.roles.some((role) => roles.includes(role.rol) && role.status);
   };
 
-  const isAdmin = (): boolean => hasRole('ADMINISTRADOR');
-  const isArquitecto = (): boolean => hasRole('ARQUITECTO');
-  const isAsistente = (): boolean => hasRole('ASISTENTE');
+  const isAdmin = (): boolean => hasRole(ROLES.ADMIN);
+  const isProjectManager = (): boolean => hasRole(ROLES.PROJECT_MANAGER);
+  const isAsistente = (): boolean => hasRole(ROLES.ASSISTANT);
 
   const userRoles = user?.roles?.filter((role) => role.status).map((role) => role.rol) || [];
 
@@ -155,30 +183,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return (
     <AuthContext.Provider
       value={{
-        // Estado
         isLoading, 
         isAuthenticated,
         user,
-        
-        // Métodos de autenticación
         login,
         logout,
-        
-        // Métodos de roles
         hasRole,
         hasAnyRole,
         isAdmin,
-        isArquitecto,
+        isProjectManager,
         isAsistente,
         userRoles,
-        
-        // Métodos de permisos
         hasPermission,
         hasAnyPermission,
         hasAllPermissions,
         getPermissions,
-        
-        // Cambio de contraseña
         requiresPasswordChange,
         clearPasswordChangeFlag,
       }}

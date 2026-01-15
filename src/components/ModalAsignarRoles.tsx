@@ -23,6 +23,7 @@ import * as Yup from 'yup';
 import { asignarRoles } from '../services/userService';
 import { getRoles } from '../services/roleService';
 import ConfirmDialog from './ConfirmDialog';
+import { ROLE_DESCRIPTIONS } from '../constants/roles';
 
 interface Role {
   idrol: number;
@@ -50,11 +51,7 @@ interface ModalAsignarRolesProps {
 interface FormValues {
   selectedRoles: number[];
 }
-const roleDescriptions: Record<string, string> = {
-  'ADMINISTRADOR': 'Acceso total al sistema',
-  'ARQUITECTO': 'Acceso propio a presupuestos y proyectos',
-  'ASISTENTE': 'Acceso limitado a tareas asignadas',
-};
+
 
 const validationSchema = Yup.object({
   selectedRoles: Yup.array()
@@ -251,7 +248,7 @@ const ModalAsignarRoles = ({ open, onClose, onSuccess, user }: ModalAsignarRoles
                                   {rol.rol}
                                 </Typography>
                                 <Typography variant="caption" color="text.secondary">
-                                  {roleDescriptions[rol.rol] || 'Sin descripción'}
+                                  {ROLE_DESCRIPTIONS[rol.rol] || 'Sin descripción'}
                                 </Typography>
                               </Box>
                             }

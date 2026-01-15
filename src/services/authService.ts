@@ -1,12 +1,12 @@
 // src/services/authService.ts
 
 import client from '../config/client';
-import type { MeApiResponse, LoginApiResponse, LoginServiceResponse } from '../types/auth.types';
+import type { MeApiResponse, LoginApiResponse, LoginServiceResponse, User } from '../types/auth.types';
 
 /**
  * Obtener datos del usuario actual (con permisos completos)
  */
-export const getCurrentUser = async () => {
+export const getCurrentUser = async ():Promise<User> => {
   const response = await client.get<MeApiResponse>('/auth/me');
   return response.data.data;
 };

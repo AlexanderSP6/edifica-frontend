@@ -7,6 +7,9 @@ import {
   IconButton,
   InputAdornment,
   CircularProgress,
+  Snackbar,
+  Alert,
+  AlertTitle,
 } from '@mui/material';
 import { Email, Visibility, VisibilityOff, Engineering, Lock } from '@mui/icons-material';
 import { styled } from '@mui/system';
@@ -174,9 +177,44 @@ const LoginButton = styled(Button)({
 // ==========================================
 
 const Login: React.FC = () => {
+
   const [showPassword, setShowPassword] = useState(false);
+  
+  //Estado para Snackbar
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'error' | 'warning' | 'info' | 'success';
+    title?: string;
+  }>({
+    open: false,
+    message: '',
+    severity: 'error',
+  });
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // ==========================================
+  // HELPER PARA MOSTRAR MENSAJES
+  // ==========================================
+
+  const showMessage = (
+    message: string,
+    severity: 'error' | 'warning' | 'info' | 'success' = 'error',
+    title?: string
+  ) => {
+    setSnackbar({
+      open: true,
+      message,
+      severity,
+      title,
+    });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar((prev) => ({ ...prev, open: false }));
+  };
+
 
   // ==========================================
   // FORMIK
@@ -201,62 +239,75 @@ const Login: React.FC = () => {
     }),
 
     onSubmit: async (values) => {
-      try {
-        // ==========================================
-        // LLAMAR AL SERVICIO DE LOGIN
-        // ==========================================
-        const response = await loginService(values.email, values.password);
+  try {
+    // Llamar al servicio de login 
+    const response = await loginService(values.email, values.password);
 
-        const { access_token, user, expires_in } = response.data;
+    const { access_token, user, expires_in } = response.data;
 
-        // ==========================================
-        // VALIDAR QUE TENGA PERMISOS
-        // ==========================================
-        if (!user.permisos || user.permisos.length === 0) {
-          alert(
-            'Error: Usuario sin permisos asignados.\n\n' +
-            'Contacta al administrador del sistema.'
+    // Validar que tenga permisos
+    if (!user.permisos || user.permisos.length === 0) {
+      alert(
+        'Error: Usuario sin permisos asignados.\n\n' +
+        'Contacta al administrador del sistema.'
+      );
+      return;
+    }
+    
+    // Verificar si requiere cambio de contraseña
+    const requiresPasswordChange = user.password_reset_required || false;
+    
+    // Guardar en AuthContext 
+    login(access_token, user, expires_in, requiresPasswordChange);
+
+    // Navegar según requiera cambio o no
+    if (requiresPasswordChange) {
+      navigate('/force-change-password', { replace: true });
+    } else {
+      navigate('/presupuestos', { replace: true });
+    }
+
+  } catch (err: any) {
+    console.error('Error en login:', err);
+
+    if (err.response?.status === 401) {
+      // Verificar si es expiración de contraseña temporal
+      if (err.response?.data?.password_expired) {
+      showMessage(
+              'Tu contraseña temporal ha caducado. Por favor, contacta al administrador del sistema para solicitar una nueva contraseña temporal.',
+              'warning',
+              'Contraseña Temporal Expirada'
+            );
+    } else {
+      showMessage(
+              'El correo electrónico o la contraseña que ingresaste son incorrectos. Por favor, verifica tus datos e intenta nuevamente.',
+              'error',
+              'Credenciales Incorrectas'
+            );
+    }
+    } else if (err.response?.status === 403) {
+      showMessage(
+            'Tu cuenta ha sido desactivada. Por favor, contacta al administrador del sistema para obtener más información.',
+            'error',
+            'Cuenta Desactivada'
           );
-          return;
-        }
-        // ==========================================
-        // GUARDAR EN AUTHCONTEXT
-        // ==========================================
-        login(access_token, user, expires_in, false);
-
-        // ==========================================
-        // NAVEGAR A DASHBOARD
-        // ==========================================
-        navigate('/presupuestos', { replace: true });
-
-      } catch (err: any) {
-        console.error('Error en login:', err);
-
-        // ==========================================
-        // MANEJO DE ERRORES
-        // ==========================================
-        if (err.response?.status === 401) {
-          alert(
-            'Credenciales incorrectas.\n\n' +
-            'Verifica tu correo electrónico y contraseña e inténtalo nuevamente.'
+    } else if (err.response?.status >= 500) {
+      showMessage(
+            'Estamos experimentando problemas técnicos. Por favor, intenta nuevamente en unos momentos o contacta al soporte si el problema persiste.',
+            'error',
+            'Error del Servidor'
           );
-        } else if (err.response?.status === 403) {
-          alert(
-            'Tu cuenta está desactivada.\n\n' +
-            'Contacta al administrador para más información.'
+    } else {
+      showMessage(
+            err.response?.data?.message ||
+              err.message ||
+              'Ocurrió un error inesperado al iniciar sesión. Por favor, intenta nuevamente.',
+            'error',
+            'Error al Iniciar Sesión'
           );
-        } else if (err.response?.status >= 500) {
-          alert(
-            'Error del servidor.\n\n' +
-            'Por favor, intenta nuevamente en unos momentos.'
-          );
-        } else {
-          // Usar el mensaje mejorado del servicio si existe
-          const errorMessage = err.message || 'Error al iniciar sesión';
-          alert(errorMessage);
-        }
-      }
-    },
+    }
+  }
+},
   });
 
   // ==========================================
@@ -264,11 +315,11 @@ const Login: React.FC = () => {
   // ==========================================
 
   useEffect(() => {
-    const token = Cookies.get('token');
+    const storedUser = localStorage.getItem('user');
     const forceChange = Cookies.get('force_password_change');
 
-    if (token && !forceChange) {
-      navigate('/presupuestos');
+    if (storedUser && !forceChange) {
+      navigate('/presupuestos', { replace: true });
     }
   }, [navigate]);
 
@@ -423,6 +474,121 @@ const Login: React.FC = () => {
             </Typography>
           </Box>
         </FormCard>
+        
+        {/* ========================================== */}
+        {/* SNACKBAR */}
+        { /* ========================================== */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={8000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+          sx={{
+            top: '24px !important',
+            '& .MuiPaper-root': {
+              minWidth: '420px',
+              maxWidth: '520px',
+              borderRadius: '12px',
+              boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12)',
+            },
+          }}
+        >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          variant="outlined"
+          sx={{
+              width: '100%',
+              padding: '18px 24px',
+              backgroundColor: '#ffffff',
+              alignItems: 'flex-start',
+      
+              // Borde izquierdo grueso según severidad
+              borderLeft: '6px solid',
+              borderLeftColor: 
+              snackbar.severity === 'error' ? '#d32f2f' :
+              snackbar.severity === 'warning' ? '#ed6c02' :
+              snackbar.severity === 'success' ? '#2e7d32' :
+              '#0288d1',
+      
+              // Fondo sutil del color
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                opacity: 0.04,
+                backgroundColor: 
+                snackbar.severity === 'error' ? '#d32f2f' :
+                snackbar.severity === 'warning' ? '#ed6c02' :
+                snackbar.severity === 'success' ? '#2e7d32' :
+                '#0288d1',
+                pointerEvents: 'none',
+              },
+      
+              // Icono con colores vibrantes
+              '& .MuiAlert-icon': {
+                fontSize: '28px',
+                marginRight: '16px',
+                padding: '6px',
+                borderRadius: '8px',
+                color: 
+                  snackbar.severity === 'error' ? '#d32f2f' :
+                  snackbar.severity === 'warning' ? '#ed6c02' :
+                  snackbar.severity === 'success' ? '#2e7d32' :
+                  '#0288d1',
+                backgroundColor: 
+                  snackbar.severity === 'error' ? 'rgba(211, 47, 47, 0.1)' :
+                  snackbar.severity === 'warning' ? 'rgba(237, 108, 2, 0.1)' :
+                  snackbar.severity === 'success' ? 'rgba(46, 125, 50, 0.1)' :
+                  'rgba(2, 136, 209, 0.1)',
+              },
+      
+              // Botón cerrar con color del tema
+              '& .MuiAlert-action': {
+                '& .MuiIconButton-root': {
+                  color: 
+                    snackbar.severity === 'error' ? '#d32f2f' :
+                    snackbar.severity === 'warning' ? '#ed6c02' :
+                    snackbar.severity === 'success' ? '#2e7d32' :
+                    '#0288d1',
+                '&:hover': {
+                  backgroundColor: 
+                    snackbar.severity === 'error' ? 'rgba(211, 47, 47, 0.08)' :
+                    snackbar.severity === 'warning' ? 'rgba(237, 108, 2, 0.08)' :
+                    snackbar.severity === 'success' ? 'rgba(46, 125, 50, 0.08)' :
+                    'rgba(2, 136, 209, 0.08)',
+                  },
+                },
+              },    
+          }}
+        >
+        {snackbar.title && (
+          <AlertTitle 
+          sx={{ 
+            fontWeight: 700, 
+            fontSize: '1.05rem',
+            marginBottom: '6px',
+            color: '#1a1a1a',
+          }}
+          >
+          {snackbar.title}
+          </AlertTitle>
+        )}
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            lineHeight: 1.6,
+            fontSize: '0.9rem',
+            color: '#424242',
+          }}
+        >
+        {snackbar.message}
+        </Typography>
+      </Alert>
+      </Snackbar>
       </FormSection>
     </LoginContainer>
   );

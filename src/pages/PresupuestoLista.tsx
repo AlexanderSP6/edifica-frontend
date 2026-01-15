@@ -283,7 +283,7 @@ const PresupuestoLista: React.FC = () => {
 
   const customActions:
   DataTableAction<Presupuesto>[] = [
-    // Ver detalle: TODOS (ADMIN, ARQUITECTO, ASISTENTE)
+    // Ver detalle: TODOS (ADMIN, PROJECT_MANAGER, ASISTENTE)
     {
       icon: <VisibilityIcon fontSize="small" />,
       label: 'Ver detalle',
@@ -292,7 +292,7 @@ const PresupuestoLista: React.FC = () => {
     },
   ];
 
-  // Editar: Solo ADMIN y ARQUITECTO (NO ASISTENTE)
+  // Editar: Solo ADMIN y PROJECT_MANAGER (NO ASISTENTE)
   if (hasAnyPermission(['editar_presupuesto', 'editar_presupuesto_propio'])) {
     customActions.push({
       icon: <EditIcon fontSize="small" />,
@@ -302,7 +302,7 @@ const PresupuestoLista: React.FC = () => {
     });
   }
 
-  // Toggle estado: Solo ADMIN (NO ARQUITECTO ni ASISTENTE)
+  // Toggle estado: Solo ADMIN (NO PROJECT_MANAGER ni ASISTENTE)
   if (hasPermission('toggle_presupuesto')) {
     customActions.push({
       icon: <ToggleOffIcon fontSize="small" />,
@@ -327,7 +327,7 @@ const PresupuestoLista: React.FC = () => {
         </Grid>
         <Grid>
           <Box display="flex" gap={2}>
-            {/* Nuevo Presupuesto: Solo ADMIN y ARQUITECTO */}
+            {/* Nuevo Presupuesto: Solo ADMIN y PROJECT_MANAGER */}
             <PermissionGate permission="crear_presupuesto">
               <Button
                 variant="contained"

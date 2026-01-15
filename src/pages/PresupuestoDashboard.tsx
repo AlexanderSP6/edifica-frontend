@@ -41,7 +41,7 @@ import PermissionGate from '../components/PermissionGate';
 const PresupuestoDashboard: React.FC = () => {
   const navigate = useNavigate();
   const presupuesto = usePresupuesto();
-  const { isArquitecto } = useAuth(); 
+  const { isProjectManager } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -149,7 +149,7 @@ const PresupuestoDashboard: React.FC = () => {
             Dashboard de Presupuestos
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {isArquitecto() ? 'Resumen de tus presupuestos' : 'Resumen general de presupuestos'}
+            {isProjectManager() ? 'Resumen de tus presupuestos' : 'Resumen general de presupuestos'}
           </Typography>
         </Box>
 
@@ -167,7 +167,7 @@ const PresupuestoDashboard: React.FC = () => {
             </IconButton>
           </Tooltip>
 
-          {/* Solo ADMIN y ARQUITECTO */}
+          {/* Solo ADMIN y PROJECT_MANAGER */}
           <PermissionGate permission="crear_presupuesto">
             <Button
               variant="contained"
@@ -219,7 +219,7 @@ const PresupuestoDashboard: React.FC = () => {
                     {totalPresupuestos}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {isArquitecto() ? 'Mis Presupuestos' : 'Total Presupuestos'}
+                    {isProjectManager() ? 'Mis Presupuestos' : 'Total Presupuestos'}
                   </Typography>
                 </Box>
               </Stack>
@@ -440,10 +440,10 @@ const PresupuestoDashboard: React.FC = () => {
                 No hay presupuestos recientes
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {isArquitecto() ? 'Crea tu primer presupuesto para comenzar' : 'No hay presupuestos creados aún'}
+                {isProjectManager() ? 'Crea tu primer presupuesto para comenzar' : 'No hay presupuestos creados aún'}
               </Typography>
-              
-              {/* Solo ADMIN y ARQUITECTO */}
+
+              {/* Solo ADMIN y PROJECT_MANAGER */}
               <PermissionGate permission="crear_presupuesto">
                 <Button
                   variant="contained"
@@ -554,7 +554,7 @@ const PresupuestoDashboard: React.FC = () => {
                         </IconButton>
                       </Tooltip>
 
-                      {/*  Solo ADMIN y ARQUITECTO */}
+                      {/*  Solo ADMIN y PROJECT_MANAGER */}
                       <PermissionGate permissions={['editar_presupuesto', 'editar_presupuesto_propio']}>
                         <Tooltip title="Editar">
                           <span>

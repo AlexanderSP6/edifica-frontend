@@ -410,6 +410,7 @@ const handleFormSubmit = async (e: React.FormEvent) => {
                 Datos Básicos
               </StepLabel>
             </Step>
+            {!isEditMode && (
             <Step>
               <StepLabel
                 optional={
@@ -421,6 +422,7 @@ const handleFormSubmit = async (e: React.FormEvent) => {
                 Precios
               </StepLabel>
             </Step>
+            )}
           </Stepper>
 
           {/* PASO 1: Datos Básicos */}
@@ -516,7 +518,7 @@ const handleFormSubmit = async (e: React.FormEvent) => {
           )}
 
           {/* PASO 2: Precios */}
-          {activeStep === 1 && (
+          {activeStep === 1 && !isEditMode &&(
             <Box sx={{ py: 1 }}>
               {/* Card de Componentes del Precio */}
               <Paper 
@@ -699,8 +701,8 @@ const handleFormSubmit = async (e: React.FormEvent) => {
             </Button>
           )}
 
-          {/* Botón Siguiente (solo en paso 1) */}
-          {activeStep === 0 && (
+          {/* Botón Siguiente (solo en paso 1 y modo Crear) */}
+          {activeStep === 0 && !isEditMode && (
             <Button
               onClick={handleNext}
               variant="contained"
@@ -712,8 +714,26 @@ const handleFormSubmit = async (e: React.FormEvent) => {
             </Button>
           )}
 
-          {/* Botón Guardar (solo en paso 2) */}
-          {activeStep === 1 && (
+
+        {/* Botón Guardar en paso 2 (modo CREAR) */}
+        {activeStep === 1 && !isEditMode && (
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={loading || isValidating}
+            sx={{ textTransform: 'none', minWidth: 130 }}
+          >
+          {(loading || isValidating) ? (
+            <CircularProgress size={20} color="inherit" />
+          ) : (
+            'Guardar'
+          )}
+          </Button>
+        )}
+
+
+          {/* Botón Guardar (solo en modo EDITAR -paso 1) */}
+          {activeStep === 0 && isEditMode &&(
             <Button
               type="submit"
               variant="contained"
@@ -722,10 +742,8 @@ const handleFormSubmit = async (e: React.FormEvent) => {
             >
               {(loading || isValidating) ? (
                 <CircularProgress size={20} color="inherit" />
-              ) : isEditMode ? (
-                'Actualizar'
               ) : (
-                'Guardar'
+                'Actualizar'
               )}
             </Button>
           )}

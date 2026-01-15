@@ -70,7 +70,7 @@ export const generarFormularioB2Completo = (
     ]);
   });
 
-  // ✅ TOTAL MATERIALES (CORREGIDO)
+  //  TOTAL MATERIALES 
   tableBody.push([
     '',
     { content: 'TOTAL MATERIALES:', colSpan: 3, styles: { fontStyle: 'bold', halign: 'right' } },

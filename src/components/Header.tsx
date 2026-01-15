@@ -26,7 +26,6 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { logout as logoutService } from '../services/authService';
 
 
 //  FUNCIONES DEL PERFIL DE USUARIO
@@ -107,29 +106,20 @@ const Header: React.FC = () => {
     setIsLoggingOut(true);
     handleMenuClose();
     
+    
     await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // 1. Llamar al backend para invalidar token
-    try {
-      await logoutService();
-    } catch (backendError) {
-      console.warn('Error al llamar al backend para logout:', backendError);
-    }
-    
-    // 2. Limpiar estado local
-    logout();
-    
-    // 3. Redirigir
-    navigate('/login', { replace: true });
+    await logout();
     
   } catch (error) {
     console.error('Error al cerrar sesión:', error);
-    logout();
-    navigate('/login', { replace: true });
+    
+    // Fallback: Si falla todo, forzar limpieza y navegación
+    localStorage.clear();
+    window.location.href = '/login';
   } finally {
     setIsLoggingOut(false);
   }
-}, [logout, navigate, handleMenuClose]);
+}, [logout, handleMenuClose]);
 
   // DATOS DEL USUARIO
 

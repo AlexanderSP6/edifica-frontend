@@ -45,7 +45,7 @@ import { getRoles } from '../services/roleService';
 import ResetPasswordModal from '../components/ResetPasswordModal';
 import { useAuth } from '../auth/AuthContext';
 import { exportarUsuariosPDF } from '../utils/usuariosPDF';
-
+import { ROLE_COLORS } from '../constants/roles';
 
 interface User {
   iduser: number;
@@ -74,16 +74,7 @@ interface Role {
 }
 
 const getRolColor = (rol: string): "error" | "primary" | "success" | "default" => {
-    switch (rol) {
-      case 'ADMINISTRADOR':
-        return 'error';
-      case 'ARQUITECTO':
-        return 'primary';
-      case 'ASISTENTE':
-        return 'success';
-      default:
-        return 'default';
-    }
+  return ROLE_COLORS[rol] || 'default';
 };
 
 // Estilo para select

@@ -92,6 +92,17 @@ const ModalCliente: React.FC<ModalClienteProps> = ({
     return undefined;
   };
 
+  // Determinar label y placeholder según tipo
+  const getCILabel = () => {
+    return formik.values.tipo_cliente === 'empresa' ? 'NIT' : 'CI';
+  };
+
+  const getCIPlaceholder = () => {
+    return formik.values.tipo_cliente === 'empresa' 
+      ? 'Ej: 12345678' 
+      : 'Ej: 1234567 LP';
+  };
+
   // ==========================================
   // EFECTOS
   // ==========================================
@@ -105,6 +116,17 @@ const ModalCliente: React.FC<ModalClienteProps> = ({
       setSubmitError('');
     }
   }, [open, itemEdit]);
+
+  // Limpiar campo cuando cambia tipo (crear O editar)
+  useEffect(() => {
+  // Solo limpiar si cambió el tipo
+  if (itemEdit && formik.values.tipo_cliente !== itemEdit.tipo_cliente) {
+    formik.setFieldValue('ci', '');
+  } else if (!itemEdit && formik.values.tipo_cliente) {
+    // En modo crear, limpiar siempre
+    formik.setFieldValue('ci', '');
+  }
+}, [formik.values.tipo_cliente]);
 
   // ==========================================
   // HANDLERS
@@ -177,12 +199,12 @@ const ModalCliente: React.FC<ModalClienteProps> = ({
               </TextField>
             </Grid>
 
-            {/* Fila 2: CI */}
+            {/* Fila 2: CI/NIT */}
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label="CI"
-                placeholder="Ej: 1234567 LP"
+                label={getCILabel()}
+                placeholder={getCIPlaceholder()}
                 {...formik.getFieldProps('ci')}
                 error={formik.touched.ci && Boolean(formik.errors.ci)}
                 helperText={getErrorText('ci')}

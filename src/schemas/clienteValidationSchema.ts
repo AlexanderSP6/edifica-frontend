@@ -10,11 +10,44 @@ export const clienteValidationSchema = Yup.object().shape({
     .required('El tipo de cliente es obligatorio')
     .oneOf(['persona', 'empresa'], 'El tipo de cliente debe ser persona o empresa'),
 
-  // CI
+  // CI / NIT según tipo de cliente
   ci: Yup.string()
-    .required('El CI es obligatorio')
-    .max(20, 'El CI no puede exceder 20 caracteres')
-    .trim(),
+    .required('Este campo es obligatorio')
+    .max(20, 'No puede exceder 20 caracteres')
+    .trim()
+    .test('ci-nit-format', function(value) {
+      const { tipo_cliente } = this.parent;
+      
+      if (!value) return true; 
+      
+      // Validación para Persona Natural (CI)
+      if (tipo_cliente === 'persona') {
+        // CI debe tener entre 5-10 dígitos seguidos opcionalmente por un espacio y 1-5 caracteres alfanuméricos
+        // Ejemplos válidos: 1234567 LP, 1234567890A
+        const ciRegex = /^[0-9]{5,10}(\s?[A-Z0-9-]{1,5})?$/i;
+        
+        if (!ciRegex.test(value.trim())) {
+          return this.createError({
+            message: 'CI inválido. Formato: 1234567 LP',
+          });
+        }
+      }
+      
+      // Validación para Empresa (NIT)
+      if (tipo_cliente === 'empresa') {
+        // NIT debe ser solo números (puede tener guiones)
+        // Ejemplos válidos: 1234567890, 123456789-0
+        const nitRegex = /^[0-9]{7,12}(-?[0-9])?$/;
+        
+        if (!nitRegex.test(value.trim())) {
+          return this.createError({
+            message: 'NIT inválido. Debe contener entre 7-12 dígitos',
+          });
+        }
+      }
+      
+      return true;
+    }),
 
   // Nombre Completo
   nombre_completo: Yup.string()

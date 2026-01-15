@@ -92,8 +92,8 @@ const AppRoutes: React.FC = () => {
       {/* ========================================== */}
       {/* MÓDULO CONSTRUCCIÓN */}
       {/* ========================================== */}
-      
-      {/* Categorías - Admin y Arquitecto */}
+
+      {/* Categorías - Admin y Project Manager */}
       <Route
         path="/categorias"
         element={
@@ -105,7 +105,7 @@ const AppRoutes: React.FC = () => {
         }
       />
 
-      {/* APU Items - Admin y Arquitecto */}
+      {/* APU Items - Admin y Project Manager */}
       <Route
         path="/apu-items"
         element={
@@ -117,7 +117,7 @@ const AppRoutes: React.FC = () => {
         }
       />
 
-      {/* Mano de Obra - Admin y Arquitecto */}
+      {/* Mano de Obra - Admin y Project Manager */}
       <Route
         path="/mano-obra"
         element={
@@ -129,7 +129,7 @@ const AppRoutes: React.FC = () => {
         }
       />
 
-      {/* Materiales - Admin y Arquitecto */}
+      {/* Materiales - Admin y Project Manager */}
       <Route
         path="/materiales"
         element={
@@ -141,7 +141,7 @@ const AppRoutes: React.FC = () => {
         }
       />
 
-      {/* Equipos - Admin y Arquitecto */}
+      {/* Equipos - Admin y Project Manager */}
       <Route
         path="/equipos"
         element={
@@ -153,7 +153,7 @@ const AppRoutes: React.FC = () => {
         }
       />
 
-      {/* Clientes - Admin y Arquitecto */}
+      {/* Clientes - Admin y Project Manager */}
       <Route
         path="/clientes"
         element={
@@ -167,7 +167,7 @@ const AppRoutes: React.FC = () => {
 
       {/* ========================================== */}
       {/* MÓDULO PRESUPUESTOS */}
-      {/* Admin, Arquitecto, Asistente*/}
+      {/* Admin, Project Manager, Asistente */}
       {/* ========================================== */}
 
       {/* Dashboard */}
@@ -198,7 +198,7 @@ const AppRoutes: React.FC = () => {
         }
       />
 
-      {/* Crear Nuevo - Solo Admin y Arquitecto */}
+      {/* Crear Nuevo - Solo Admin y Project Manager */}
       <Route
         path="/presupuestos/crear"
         element={
@@ -224,7 +224,7 @@ const AppRoutes: React.FC = () => {
         }
       />
 
-      {/* Editar - Admin y Arquitecto  */}
+      {/* Editar - Admin y Project Manager */}
       <Route
         path="/presupuestos/:id/editar"
         element={

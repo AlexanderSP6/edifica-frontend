@@ -44,17 +44,19 @@ client.interceptors.request.use(
 client.interceptors.response.use(
   (response) => response,
   (error) => {
-
+    // Manejar error 401 (No autorizado)
     if (error.response?.status === 401) {
       const isLoginRequest = error.config?.url?.includes('/auth/login');
 
       if (!isLoginRequest) {
-        // Limpiar cookies
-        Cookies.remove('token', { path: '/' });
-        Cookies.remove('user', { path: '/' });
+        // Limpiar localStorage
+        localStorage.removeItem('user');
+        localStorage.removeItem('token_expires_at');
+        
+        // Limpiar cookies que frontend puede leer
         Cookies.remove('force_password_change', { path: '/' });
 
-        // Redirigir solo si no estamos en login
+        // Redirigir a login 
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';
         }
@@ -63,6 +65,6 @@ client.interceptors.response.use(
 
     return Promise.reject(error);
   }
-);;
+);
 
 export default client;

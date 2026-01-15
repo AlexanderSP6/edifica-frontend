@@ -88,15 +88,33 @@ const ForceChangePassword = () => {
         clearPasswordChangeFlag();
       }
     } catch (err: any) {
-      setSubmitting(false);
+    setSubmitting(false);
 
-      if (err.response?.status === 422) {
+    if (err.response?.status === 422) {
         const errors = err.response.data.errors;
         Object.keys(errors).forEach((key) => {
           setFieldError(key, errors[key][0]);
         });
       } else if (err.response?.status === 401) {
-        setFieldError('temporary_password', 'La contraseña temporal es incorrecta');
+        // Verificar si es expiración de contraseña
+        if (err.response?.data?.error ===   'password_expired') {
+          setError(
+            'Contraseña Temporal Expirada\n\n' +
+            'Tu contraseña temporal ya no es válida. Por tu seguridad, debes contactar al administrador del sistema para obtener una nueva contraseña temporal.'
+          );
+      
+          // Cerrar sesión automáticamente después de 3 segundos
+          setTimeout(() => {
+            logout();
+            navigate('/login', {
+              state: {
+                message: 'Tu contraseña temporal expiró. Contacta al administrador.'
+              }
+            });
+          }, 3000);
+        } else {
+          setFieldError('temporary_password', 'La contraseña temporal es incorrecta');
+        }
       } else {
         setError(
           err.response?.data?.message || 
@@ -405,7 +423,7 @@ const ForceChangePassword = () => {
         {/* Footer */}
         <Box mt={3} textAlign="center">
           <Typography variant="caption" sx={{ color: 'white', opacity: 0.9 }}>
-            🔒 Sistema de Registro Militar — Ministerio de Defensa
+            Sistema de Registro Militar — Ministerio de Defensa
           </Typography>
         </Box>
       </Container>

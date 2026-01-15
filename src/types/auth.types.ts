@@ -2,9 +2,8 @@
  * TIPOS Y ESTRUCTURAS DE AUTENTICACIÓN
 */
 
-// ==========================================
-// PERMISOS Y ROLES
 
+// PERMISOS Y ROLES
 
 export interface Permiso {
   idpermiso: number;
@@ -68,10 +67,14 @@ export interface User {
   
   // Helpers booleanos desde backend
   es_admin: boolean;
-  es_arquitecto: boolean;
+  es_project_manager: boolean;
   es_asistente: boolean;
   puede_ver_usuarios: boolean;
   puede_gestionar_presupuestos: boolean;
+
+  password_reset_required?: boolean;
+  password_expires_at?: string | null;
+  password_changed_at?: string | null;
   
   // Timestamps
   last_login: string | null;
@@ -84,7 +87,7 @@ export interface User {
 // ==========================================
 
 /**
- * Devuelve token y usuario básico (SIN permisos completos)
+ * Devuelve token y usuario básico 
  */
 export interface LoginApiResponse {
   status: boolean;
@@ -105,7 +108,7 @@ export interface MeApiResponse {
 }
 
 /**
- * Respuesta del servicio de login (authService.ts)
+ * Respuesta del servicio de login 
  * Contiene token y usuario completo (CON permisos)
  */
 export interface LoginServiceResponse {
@@ -139,7 +142,7 @@ export interface ChangePasswordData {
 }
 
 /**
- * Datos para cambio forzado de contraseña (primer login)
+ * Datos para cambio forzado de contraseña 
  */
 export interface ForceChangePasswordData {
   temporary_password: string;
@@ -168,7 +171,7 @@ export interface AuthContextType {
   hasRole: (roleName: string) => boolean;
   hasAnyRole: (roles: string[]) => boolean;
   isAdmin: () => boolean;
-  isArquitecto: () => boolean;
+  isProjectManager: () => boolean;
   isAsistente: () => boolean;
   userRoles: string[];
   

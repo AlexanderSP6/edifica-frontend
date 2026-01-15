@@ -6,7 +6,6 @@ import {
   DialogActions,
   Button,
   TextField,
-  
   FormControl,
   InputLabel,
   Select,
@@ -20,7 +19,6 @@ import {
   Chip,    
 } from '@mui/material';
 import Grid from '@mui/material/GridLegacy';
-
 import { 
   Close as CloseIcon,
   CheckCircle,
@@ -28,6 +26,7 @@ import {
   Person,         
   Email,          
   AccountCircle,
+  Lock
 } from '@mui/icons-material';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
@@ -264,6 +263,8 @@ const ModalUsuario = ({ open, onClose, onSuccess, mode, userData }: ModalUsuario
       confirmPassword: '',
       idrol: 2,
       status: true,
+      force_password_change: false, 
+      password_expiration_hours: 24,
     };
   };
 
@@ -472,7 +473,7 @@ const ModalUsuario = ({ open, onClose, onSuccess, mode, userData }: ModalUsuario
                     size="small"
                     name="grado"
                     label="Grado *"
-                    placeholder="Ej: Sgto., Cap., Tte."
+                    placeholder="Ej: Arquitecto., Ingeniero., director de proyectos."
                     value={values.grado}
                     onChange={handleChange}
                     onBlur={handleBlur}
@@ -802,27 +803,328 @@ const ModalUsuario = ({ open, onClose, onSuccess, mode, userData }: ModalUsuario
 
                 {/* CONTRASEÑAS: Solo para crear usuario */}
                 {mode === 'create' && (
-                  <>
-                    <Grid item xs={12} sm={6}>
-                     <PasswordField
-                      name="password"
-                      label="Contraseña"
-                      showStrengthBar
-                      showCriteria
-                      required
-                      placeholder="Ingrese contraseña segura"
-                    />
-                    </Grid>
+                <>
+                {/*  Checkbox + Radio Buttons de Expiración */}
+{/* ============================================================ */}
+{/*  CHECKBOX + RADIO BUTTONS DE EXPIRACIÓN - OPCIÓN 1         */}
+{/* ============================================================ */}
+<Grid item xs={12}>
+  <Box
+    sx={{
+      p: 2.5,
+      background: values.force_password_change
+        ? 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)'
+        : 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)',
+      borderRadius: 2,
+      border: `2px solid ${values.force_password_change ? '#1976d2' : '#bdbdbd'}`,
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      '&:hover': {
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        transform: 'translateY(-2px)',
+      }
+    }}
+    onClick={() => setFieldValue('force_password_change', !values.force_password_change)}
+  >
+    <Box display="flex" alignItems="center" gap={2}>
+      <Box
+        sx={{
+          width: 40,
+          height: 40,
+          borderRadius: '50%',
+          backgroundColor: values.force_password_change ? '#1976d2' : '#9e9e9e',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          flexShrink: 0,
+        }}
+      >
+        <Lock />
+      </Box>
 
-                    <Grid item xs={12} sm={6}>
-                    <PasswordField
-                      name="confirmPassword"
-                      label="Confirmar Contraseña"
-                      required
-                      placeholder="Repita la contraseña"
-                    />
-                    </Grid>
-                  </>
+      <Box sx={{ flex: 1 }}>
+        <Typography 
+          variant="body2" 
+          fontWeight={600}
+          sx={{ color: values.force_password_change ? '#1565c0' : '#424242' }}
+        >
+          Generar contraseña temporal con expiración
+        </Typography>
+        <Typography 
+          variant="caption" 
+          sx={{ 
+            color: values.force_password_change ? '#1976d2' : '#616161',
+            display: 'block',
+            mt: 0.5
+          }}
+        >
+          El usuario deberá crear su propia contraseña en el primer inicio de sesión
+        </Typography>
+      </Box>
+
+      <Box
+        sx={{
+          width: 56,
+          height: 30,
+          borderRadius: 15,
+          backgroundColor: values.force_password_change ? '#1976d2' : '#bdbdbd',
+          position: 'relative',
+          flexShrink: 0,
+          transition: 'background-color 0.3s ease',
+        }}
+      >
+        <Box
+          sx={{
+            width: 24,
+            height: 24,
+            borderRadius: '50%',
+            backgroundColor: 'white',
+            position: 'absolute',
+            top: 3,
+            left: values.force_password_change ? 29 : 3,
+            transition: 'left 0.3s ease',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+          }}
+        />
+      </Box>
+    </Box>
+  </Box>
+
+  {/* Radio Buttons para Expiración (solo si checkbox marcado) */}
+  {values.force_password_change && (
+    <Box
+      sx={{
+        mt: 2,
+        p: 2.5,
+        bgcolor: 'background.paper',
+        borderRadius: 2,
+        border: '1px solid',
+        borderColor: 'divider',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <Typography 
+        variant="subtitle2" 
+        color="primary" 
+        fontWeight={600}
+        gutterBottom
+      >
+        Tiempo de validez de la contraseña temporal:
+      </Typography>
+      <Typography 
+        variant="caption" 
+        color="text.secondary" 
+        display="block" 
+        sx={{ mb: 2.5 }}
+      >
+        La contraseña dejará de funcionar automáticamente después del período seleccionado
+      </Typography>
+
+      {/* Opción 24 horas */}
+      <Box
+        onClick={() => setFieldValue('password_expiration_hours', 24)}
+        sx={{
+          p: 1.5,
+          mb: 1.5,
+          borderRadius: 1.5,
+          border: `2px solid ${values.password_expiration_hours === 24 ? '#1976d2' : '#e0e0e0'}`,
+          backgroundColor: values.password_expiration_hours === 24 ? '#e3f2fd' : 'transparent',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          '&:hover': {
+            borderColor: '#1976d2',
+            backgroundColor: values.password_expiration_hours === 24 ? '#e3f2fd' : '#f5f5f5',
+          }
+        }}
+      >
+        <Box display="flex" alignItems="center" gap={1.5}>
+          <Box
+            sx={{
+              width: 18,
+              height: 18,
+              borderRadius: '50%',
+              border: `2px solid ${values.password_expiration_hours === 24 ? '#1976d2' : '#bdbdbd'}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            {values.password_expiration_hours === 24 && (
+              <Box
+                sx={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  backgroundColor: '#1976d2',
+                }}
+              />
+            )}
+          </Box>
+          <Box>
+            <Typography variant="body2" fontWeight={500}>
+              24 horas <Typography component="span" variant="caption" color="text.secondary">(1 día)</Typography>
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Opción 48 horas */}
+      <Box
+        onClick={() => setFieldValue('password_expiration_hours', 48)}
+        sx={{
+          p: 1.5,
+          mb: 1.5,
+          borderRadius: 1.5,
+          border: `2px solid ${values.password_expiration_hours === 48 ? '#1976d2' : '#e0e0e0'}`,
+          backgroundColor: values.password_expiration_hours === 48 ? '#e3f2fd' : 'transparent',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          '&:hover': {
+            borderColor: '#1976d2',
+            backgroundColor: values.password_expiration_hours === 48 ? '#e3f2fd' : '#f5f5f5',
+          }
+        }}
+      >
+        <Box display="flex" alignItems="center" gap={1.5}>
+          <Box
+            sx={{
+              width: 18,
+              height: 18,
+              borderRadius: '50%',
+              border: `2px solid ${values.password_expiration_hours === 48 ? '#1976d2' : '#bdbdbd'}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            {values.password_expiration_hours === 48 && (
+              <Box
+                sx={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  backgroundColor: '#1976d2',
+                }}
+              />
+            )}
+          </Box>
+          <Box>
+            <Typography variant="body2" fontWeight={500}>
+              48 horas <Typography component="span" variant="caption" color="text.secondary">(2 días)</Typography>
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Opción 168 horas (7 días) */}
+      <Box
+        onClick={() => setFieldValue('password_expiration_hours', 168)}
+        sx={{
+          p: 1.5,
+          mb: 2,
+          borderRadius: 1.5,
+          border: `2px solid ${values.password_expiration_hours === 168 ? '#1976d2' : '#e0e0e0'}`,
+          backgroundColor: values.password_expiration_hours === 168 ? '#e3f2fd' : 'transparent',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          '&:hover': {
+            borderColor: '#1976d2',
+            backgroundColor: values.password_expiration_hours === 168 ? '#e3f2fd' : '#f5f5f5',
+          }
+        }}
+      >
+        <Box display="flex" alignItems="center" gap={1.5}>
+          <Box
+            sx={{
+              width: 18,
+              height: 18,
+              borderRadius: '50%',
+              border: `2px solid ${values.password_expiration_hours === 168 ? '#1976d2' : '#bdbdbd'}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            {values.password_expiration_hours === 168 && (
+              <Box
+                sx={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  backgroundColor: '#1976d2',
+                }}
+              />
+            )}
+          </Box>
+          <Box>
+            <Typography variant="body2" fontWeight={500}>
+              168 horas <Typography component="span" variant="caption" color="text.secondary">(7 días)</Typography>
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Alert informativo */}
+      <Alert 
+        severity="info" 
+        sx={{ 
+          fontSize: '0.8125rem',
+          '& .MuiAlert-icon': { 
+            fontSize: 20 
+          }
+        }}
+      >
+        <Typography variant="body2" fontWeight={600} gutterBottom>
+          ¿Qué sucede si la contraseña expira?
+        </Typography>
+        <Typography variant="caption">
+          El sistema bloqueará automáticamente el acceso y deberás generar una nueva contraseña temporal desde "Resetear contraseña".
+        </Typography>
+      </Alert>
+    </Box>
+  )}
+</Grid>
+
+    <Grid item xs={12} sm={6}>
+      <PasswordField
+        name="password"
+        label="Contraseña"
+        showStrengthBar
+        showCriteria
+        required
+        placeholder="Ingrese contraseña segura"
+      />
+      
+      {/* Advertencia  */}
+        <Alert 
+          severity="warning" 
+          sx={{ 
+            mt: 1.5, 
+            fontSize: '0.75rem',
+            py: 0.5,
+            '& .MuiAlert-icon': { fontSize: 18 }
+          }}
+        >
+          <Typography variant="caption" fontWeight={600}>
+          IMPORTANTE: Copia esta contraseña antes de guardar
+          </Typography>
+        </Alert>
+
+              </Grid>
+              <Grid item xs={12} sm={6}>
+    <PasswordField
+      name="confirmPassword"
+      label="Confirmar Contraseña"
+      required
+      placeholder="Repita la contraseña"
+              />
+              </Grid>
+              </>
                 )}
 
                 {/* SWITCH DE ESTADO */}

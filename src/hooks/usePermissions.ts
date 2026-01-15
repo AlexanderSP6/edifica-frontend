@@ -11,7 +11,7 @@ export const usePermissions = () => {
     hasPermission, 
     hasAnyPermission, 
     isAdmin, 
-    isArquitecto, 
+    isProjectManager, 
     isAsistente 
   } = useAuth();
 
@@ -32,7 +32,7 @@ export const usePermissions = () => {
       'roles': false,
       'audits': false,
 
-      // Módulos de construcción (admin y arquitecto)
+      // Módulos de construcción (admin y gestor de proyectos)
       'categorias': hasPermission('ver_categorias'),
       'unidades': hasPermission('ver_unidades'),
       'apu_items': hasPermission('ver_apu_items'),
@@ -41,7 +41,7 @@ export const usePermissions = () => {
       'equipos': hasPermission('ver_equipos'),
       'clientes': hasPermission('ver_clientes'),
 
-      // Presupuestos (admin y arquitecto con permisos específicos)
+      // Presupuestos (admin y gestor de proyectos con permisos específicos)
       'presupuestos': hasAnyPermission(['ver_presupuestos', 'ver_presupuestos_propios']),
     };
 
@@ -55,8 +55,8 @@ export const usePermissions = () => {
     // Asistente nunca puede crear
     if (isAsistente()) return false;
 
-    // Admin y Arquitecto verifican permisos específicos
-    if (isAdmin() || isArquitecto()) {
+    // Admin y Gestor de proyectos verifican permisos específicos
+    if (isAdmin() || isProjectManager()) {
       const createPermissions: Record<string, string> = {
         'usuarios': 'crear_usuario',
         'categorias': 'crear_categoria',
@@ -86,8 +86,8 @@ export const usePermissions = () => {
     // Asistente nunca puede editar
     if (isAsistente()) return false;
 
-    // PRESUPUESTOS: Arquitecto solo edita los suyos
-    if (module === 'presupuestos' && isArquitecto()) {
+    // PRESUPUESTOS: Gestor solo edita los suyos
+    if (module === 'presupuestos' && isProjectManager()) {
       // Si no hay createdBy, no puede editar 
       if (createdBy === undefined) return false;
       if (createdBy !== user?.iduser) return false;
@@ -95,8 +95,8 @@ export const usePermissions = () => {
       return hasPermission('editar_presupuesto_propio');
     }
 
-    // OTROS MÓDULOS: Arquitecto puede editar
-    if (isArquitecto()) {
+    // OTROS MÓDULOS: Gestor puede editar
+    if (isProjectManager()) {
       const editPermissions: Record<string, string> = {
         'usuarios': 'editar_usuario',
         'categorias': 'editar_categoria',
@@ -125,15 +125,15 @@ export const usePermissions = () => {
     // Asistente nunca puede eliminar
     if (isAsistente()) return false;
 
-    // PRESUPUESTOS: Arquitecto solo elimina los suyos
-    if (module === 'presupuestos' && isArquitecto()) {
+    // PRESUPUESTOS: Gestor solo elimina los suyos
+    if (module === 'presupuestos' && isProjectManager()) {
       if (createdBy === undefined) return false;
       if (createdBy !== user?.iduser) return false;
       return true;
     }
 
-    // OTROS MÓDULOS: Arquitecto puede editar
-    if (isArquitecto()) {
+    // OTROS MÓDULOS: Gestor puede editar
+    if (isProjectManager()) {
       return canEdit(module);
     }
 
@@ -218,10 +218,10 @@ export const usePermissions = () => {
   };
 
   /**
-   * Verificar si el usuario actual es arquitecto
+   * Verificar si el usuario actual es gestor de proyectos
    */
-  const userIsArquitecto = (): boolean => {
-    return isArquitecto();
+  const userIsProjectManager = (): boolean => {
+    return isProjectManager();
   };
 
   /**
@@ -255,7 +255,7 @@ export const usePermissions = () => {
 
     // Helpers de roles
     isAdmin: userIsAdmin,
-    isArquitecto: userIsArquitecto,
+    isProjectManager: userIsProjectManager,
     isAsistente: userIsAsistente,
 
     // Usuario actual
